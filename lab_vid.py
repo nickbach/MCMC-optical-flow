@@ -17,12 +17,37 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mcmc_of import MCMCOpticalFlow
 from generate_sample_images import generate_sample_images
+from lucas_kanade import lucaskanade
 import time
+from skimage.io import imread
+from os.path import normpath as fn
+from scipy.signal import convolve2d
 
 # Generate test images
-N = 20  # rows
-M = 20  # cols
-F, G, U, V = generate_sample_images(N, M, magnitude=1)
+N = 144  # rows
+M = 256  # cols
+# F, G, U, V = generate_sample_images(N, M, magnitude=1)
+
+# Set images
+n = 2
+kernel = np.ones((n, n))
+
+F = np.float32(imread(fn('../Videos/Vid300008.jpg')))
+F = np.mean(F, axis = 2)/255.
+F_convolved = convolve2d(F, kernel, mode='valid')
+F = F_convolved[::n, ::n] / n
+
+G = np.float32(imread(fn('../Videos/Vid300009.jpg')))
+G = np.mean(G, axis = 2)/255.
+G_convolved = convolve2d(G, kernel, mode='valid')
+G = G_convolved[::n, ::n] / n
+# F = np.float32(imread(fn('../Videos/frame10.jpg')))
+# G = np.float32(imread(fn('../Videos/frame11.jpg')))
+
+assert (N, M) == F.shape, "N and M should equal the image's shape"
+
+
+U,V = lucaskanade(F,G,11)
 
 # Run MCMC
 num = 3000
@@ -51,10 +76,15 @@ ep_err = np.sqrt((U - U_mmse)**2 + (V - V_mmse)**2)
 
 fig, ax = plt.subplots(2, 2, figsize=(8, 8))
 X, Y = np.meshgrid(np.arange(M), np.arange(N), indexing='xy')
+x = np.arange(U.shape[1])
+y = np.arange(U.shape[0])
+x,y = np.meshgrid(x,y[::-1])
 ax[0, 0].set_title('MMSE estimate')
-ax[0, 0].quiver(X, Y, U_mmse, V_mmse)
+ax[0, 0].quiver(x[::8,::8], y[::8,::8], U_mmse[::8,::8], -V_mmse[::8,::8], pivot='mid')
 ax[0, 1].set_title('Ground truth')
-ax[0, 1].quiver(X, Y, U, V)
+
+ax[0, 1].quiver(x[::8,::8],y[::8,::8], -U[::8,::8], V[::8,::8], pivot='mid')
+# ax[0, 1].quiver(X, Y, U, V)
 ax[1, 0].set_title('Endpoint error')
 ax[1, 0].imshow(ep_err)
 ax[1, 1].set_title('Uncertainty')

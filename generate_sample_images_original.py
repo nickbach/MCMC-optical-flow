@@ -29,7 +29,6 @@ def generate_sample_images(rows, cols, magnitude=1):
     X, Y = np.meshgrid(np.arange(cols), np.arange(rows), indexing='xy')
     F = (1/2)*(np.cos(4*np.pi*(X/cols - 0.5))*np.cos(4*np.pi*(Y/rows - 0.5)) + 1)
 
-
     # Create a velocity field & scale it accordingly
     U = (-Y/rows + 0.5)   # x axis velocity field
     V = (X/cols - 0.5)    # y axis velocity field
@@ -43,22 +42,6 @@ def generate_sample_images(rows, cols, magnitude=1):
     f = F.ravel()
     g = f + fx * u + fy * v
     G = g.reshape((rows, cols))
-
-    for n in range(32):
-        Fr = np.random.randint(rows)
-        Fc = np.random.randint(cols)
-        F[Fr, Fc] = np.random.rand(1)
-        Gr = np.random.randint(rows)
-        Gc = np.random.randint(cols)
-        G[Gr, Gc] = np.random.rand(1)
-    # F=F*0.8
-    # F[0,0] = 1
-    # G=G*0.8
-    # G[0,0] = 1
-    # F[F>=.6] = 1
-    # F[F<.4] = 0
-    # G[G>=.6] = 1
-    # G[G<.4] = 0
 
     return F, G, U, V
 
